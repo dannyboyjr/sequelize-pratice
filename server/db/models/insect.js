@@ -11,6 +11,11 @@ module.exports = (sequelize, DataTypes) => {
      */
     static associate(models) {
       // define association here
+      Insect.hasMany(models.Tree, {
+        foreignKey: 'insectId',
+        onDelete: 'cascade',
+        hooks: true,
+      })
     }
   };
   Insect.init({
