@@ -1,11 +1,39 @@
 // Instantiate router - DO NOT MODIFY
 const express = require('express');
 const router = express.Router();
+const {Tree} = require("../db/models");
 
 /**
  * BASIC PHASE 1, Step A - Import model
  */
 // Your code here
+router.get('/', async (req, res) => {
+
+    let items;
+
+    items = await Tree.findAll({
+        attributes:
+            ['heightFt', 'tree', 'id'],
+
+        order: [
+            ['heightFt', 'DESC'],
+        ]
+
+    })
+
+    res.json(items)
+})
+
+// router.get('/:id', async (req, res)=>{
+//     let treeId = req.params.id
+//     let item;
+
+//     item = await Tree.findByPk(treeId)
+
+//     res.json(item)
+// });
+
+
 
 /**
  * INTERMEDIATE BONUS PHASE 1 (OPTIONAL), Step A:
@@ -45,6 +73,10 @@ router.get('/:id', async (req, res, next) => {
 
     try {
         // Your code here
+        let treeId = req.params.id
+
+
+        tree = await Tree.findByPk(treeId)
 
         if (tree) {
             res.json(tree);
@@ -55,7 +87,7 @@ router.get('/:id', async (req, res, next) => {
                 details: 'Tree not found'
             });
         }
-    } catch(err) {
+    } catch (err) {
         next({
             status: "error",
             message: `Could not find tree ${req.params.id}`,
@@ -82,11 +114,20 @@ router.get('/:id', async (req, res, next) => {
  */
 router.post('/', async (req, res, next) => {
     try {
+        let {name, location, height, size} = req.body
+        // let heightFt = height
+        const newTree = await Tree.create({
+            tree: name,
+            location,
+            heightFt: height,
+            groundCircumferenceFt: size,
+        })
         res.json({
             status: "success",
             message: "Successfully created new tree",
+            data: newTree
         });
-    } catch(err) {
+    } catch (err) {
         next({
             status: "error",
             message: 'Could not create new tree',
@@ -116,18 +157,27 @@ router.post('/', async (req, res, next) => {
  *     - Value: Tree not found
  */
 router.delete('/:id', async (req, res, next) => {
-    try {
-        res.json({
-            status: "success",
-            message: `Successfully removed tree ${req.params.id}`,
-        });
-    } catch(err) {
-        next({
-            status: "error",
-            message: `Could not remove tree ${req.params.id}`,
-            details: err.errors ? err.errors.map(item => item.message).join(', ') : err.message
-        });
+    tree = await Tree.findByPk(req.params.id)
+    if(!tree){
+        next()
+    }{
+        try {
+            let deleteId = req.params.id
+            const deleteTree = await Tree.findByPk(deleteId)
+            await deleteTree.destroy()
+            res.json({
+                status: "success",
+                message: `Successfully removed tree ${req.params.id}`,
+            });
+        } catch (err) {
+            next({
+                status: "error",
+                message: `Could not remove tree ${req.params.id}`,
+                details: err.errors ? err.errors.map(item => item.message).join(', ') : err.message
+            });
+        }
     }
+
 });
 
 /**
@@ -165,9 +215,31 @@ router.delete('/:id', async (req, res, next) => {
  *     - Value: Tree not found
  */
 router.put('/:id', async (req, res, next) => {
+
     try {
         // Your code here
-    } catch(err) {
+        const {id, name, location, height, size} = req.body
+        const editTree = await Tree.findByPk(req.params.id)
+
+        if(id !== undefined){
+            editTree.id = id
+        }
+        if(name !== undefined){
+            editTree.tree = name
+        }
+        if(location !== undefined){
+            editTree.location = location
+        }
+        if(height !== undefined){
+            editTree.heightFt = height
+        }
+        if(size !== undefined){
+            editTree.groundCircumferenceFt = size
+        }
+        await editTree.save()
+        res.json({message: "Success!", tree: editTree})
+
+    } catch (err) {
         next({
             status: "error",
             message: 'Could not update new tree',
