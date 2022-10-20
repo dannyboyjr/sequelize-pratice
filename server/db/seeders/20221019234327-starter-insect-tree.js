@@ -1,6 +1,7 @@
 'use strict';
 
 const { Tree, Insect } = require("../models")
+const { Op } = require('sequelize');
 
 const insectTreeData = [
   {
